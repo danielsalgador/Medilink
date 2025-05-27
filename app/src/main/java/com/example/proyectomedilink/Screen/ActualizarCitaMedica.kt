@@ -1,4 +1,4 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -8,8 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.proyectomedilink.Model.CitaMedica
+import com.example.proyectomedilink.Model.EstadoCita
 import com.example.proyectomedilink.viewmodel.CitaMedicaViewModel
-import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,26 +21,35 @@ fun ActualizarCitaMedicaScreen(
     navController: NavController,
     citaId: Long
 ) {
-    // Estados para los campos del formulario
     var pacienteId by remember { mutableStateOf("") }
     var medicoId by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf("") }
     var hora by remember { mutableStateOf("") }
     var motivo by remember { mutableStateOf("") }
-    var estado by remember { mutableStateOf("Programada") }
-    var expanded by remember { mutableStateOf(false) } // Estado para el menú desplegable
+    var estado by remember { mutableStateOf(EstadoCita.Programada.name) }
+    var expanded by remember { mutableStateOf(false) }
     var mensaje by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Cargar datos de la cita al inicializar
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(citaId) {
-        viewModel.citas.value?.find { it.id == citaId }?.let { cita ->
-            pacienteId = cita.pacienteId.toString()
-            medicoId = cita.medicoId.toString()
-            fecha = cita.fecha
-            hora = cita.hora
-            motivo = cita.motivo
-            estado = cita.estado
+        scope.launch {
+            try {
+                val cita = viewModel.obtenerCitaPorId(citaId)
+                if (cita != null) {
+                    pacienteId = cita.pacienteId.toString()
+                    medicoId = cita.medicoId.toString()
+                    fecha = cita.fecha.toString()
+                    hora = cita.hora.toString()
+                    motivo = cita.motivo
+                    estado = cita.estado.name
+                } else {
+                    errorMessage = "No se encontró la cita con ID $citaId"
+                }
+            } catch (e: Exception) {
+                errorMessage = "Error al cargar la cita: ${e.message}"
+            }
         }
     }
 
@@ -47,56 +59,45 @@ fun ActualizarCitaMedicaScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Actualizar Cita #$citaId",
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Text("Actualizar Cita #$citaId", style = MaterialTheme.typography.headlineSmall)
 
-        // Campo ID Paciente
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = pacienteId,
             onValueChange = { pacienteId = it },
             label = { Text("ID Paciente") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Campo ID Médico
         OutlinedTextField(
             value = medicoId,
             onValueChange = { medicoId = it },
             label = { Text("ID Médico") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Fecha y Hora en fila
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(
                 value = fecha,
                 onValueChange = { fecha = it },
                 label = { Text("Fecha (AAAA-MM-DD)") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
+                modifier = Modifier.weight(1f)
             )
-
             OutlinedTextField(
                 value = hora,
                 onValueChange = { hora = it },
                 label = { Text("Hora (HH:MM)") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
+                modifier = Modifier.weight(1f)
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Campo Motivo
         OutlinedTextField(
             value = motivo,
             onValueChange = { motivo = it },
@@ -106,33 +107,30 @@ fun ActualizarCitaMedicaScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Selector de Estado mejorado
-        val estados = listOf("Programada", "Completada", "Cancelada")
+        val estados = EstadoCita.values().map { it.name }
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = it }
         ) {
             OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                readOnly = true,
                 value = estado,
                 onValueChange = {},
+                readOnly = true,
                 label = { Text("Estado") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                }
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
             )
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                estados.forEach { selectionOption ->
+                estados.forEach { opcion ->
                     DropdownMenuItem(
-                        text = { Text(selectionOption) },
+                        text = { Text(opcion) },
                         onClick = {
-                            estado = selectionOption
+                            estado = opcion
                             expanded = false
                         }
                     )
@@ -142,21 +140,32 @@ fun ActualizarCitaMedicaScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Botón de Actualizar
         Button(
             onClick = {
                 if (validarCampos(pacienteId, medicoId, fecha, hora, motivo, estado)) {
-                    viewModel.actualizarCitaMedica(
-                        id = citaId,
-                        pacienteId = pacienteId.toLong(),
-                        medicoId = medicoId.toLong(),
-                        motivo = motivo,
-                        estado = estado,
-                        fecha = fecha,
-                        hora = hora
-                    )
-                    mensaje = "Cita actualizada correctamente"
-                    navController.popBackStack()
+                    scope.launch {
+                        try {
+                            val fechaParsed = LocalDate.parse(fecha)
+                            val horaParsed = LocalTime.parse(hora)
+                            val estadoParsed = EstadoCita.valueOf(estado)
+
+                            // LLamada al ViewModel con el objeto CitaMedica
+                            viewModel.actualizarCitaMedica(
+                                citaId,
+                                pacienteId.toLong(),
+                                medicoId.toLong(),
+                                motivo,
+                                estado,
+                                fecha,
+                                hora
+                            )
+
+                            mensaje = "Cita actualizada correctamente"
+                            navController.popBackStack()
+                        } catch (e: Exception) {
+                            errorMessage = "Error al actualizar: ${e.message}"
+                        }
+                    }
                 } else {
                     errorMessage = "Verifique todos los campos"
                 }
@@ -166,20 +175,11 @@ fun ActualizarCitaMedicaScreen(
             Text("Actualizar")
         }
 
-        // Mensajes de feedback
         if (mensaje.isNotEmpty()) {
-            Text(
-                text = mensaje,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            Text(mensaje, color = MaterialTheme.colorScheme.primary)
         }
         if (errorMessage.isNotEmpty()) {
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            Text(errorMessage, color = MaterialTheme.colorScheme.error)
         }
     }
 }
@@ -192,10 +192,15 @@ private fun validarCampos(
     motivo: String,
     estado: String
 ): Boolean {
-    return pacienteId.isNotBlank() && medicoId.isNotBlank() &&
-            fecha.isNotBlank() && hora.isNotBlank() &&
-            motivo.isNotBlank() && estado.isNotBlank() &&
-            pacienteId.toLongOrNull() != null && medicoId.toLongOrNull() != null &&
+    return pacienteId.toLongOrNull() != null &&
+            medicoId.toLongOrNull() != null &&
             fecha.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) &&
-            hora.matches(Regex("\\d{2}:\\d{2}"))
+            hora.matches(Regex("\\d{2}:\\d{2}")) &&
+            motivo.isNotBlank() &&
+            try {
+                EstadoCita.valueOf(estado)
+                true
+            } catch (e: Exception) {
+                false
+            }
 }

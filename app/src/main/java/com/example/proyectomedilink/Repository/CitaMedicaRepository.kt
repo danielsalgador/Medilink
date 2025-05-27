@@ -1,65 +1,44 @@
 package com.example.proyectomedilink.repository
 
 import com.example.proyectomedilink.Model.CitaMedica
-import com.example.proyectomedilink.Model.Medico
-import com.example.proyectomedilink.Model.Paciente
 import com.example.proyectomedilink.interfaces.RetrofitClient
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class CitaMedicaRepository {
 
-    suspend fun obtenerCitas(): List<CitaMedica> = withContext(Dispatchers.IO) {
-        try {
-            RetrofitClient.apiService.obtenerTodasCitas()
+    suspend fun obtenerCitasMedicas(): List<CitaMedica> {
+        return try {
+            RetrofitClient.apiService.obtenerCitasMedicas()
         } catch (e: Exception) {
             emptyList()
         }
     }
 
-    suspend fun obtenerMedicos(): List<Medico> = withContext(Dispatchers.IO) {
-        try {
-            RetrofitClient.apiService.obtenerMedicos()
+    suspend fun obtenerCitaPorId(id: Long): CitaMedica? {
+        return try {
+            RetrofitClient.apiService.obtenerCitaMedicaPorId(id)
         } catch (e: Exception) {
-            emptyList()
+            null
         }
     }
 
-    suspend fun obtenerPacientes(): List<Paciente> = withContext(Dispatchers.IO) {
-        try {
-            RetrofitClient.apiService.obtenerPacientes()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    suspend fun guardarCita(cita: CitaMedica): Boolean = withContext(Dispatchers.IO) {
-        try {
-            // Para nuevas citas (id = null)
+    suspend fun agregarCitaMedica(cita: CitaMedica): CitaMedica? {
+        return try {
             RetrofitClient.apiService.guardarCitaMedica(cita)
-            true
         } catch (e: Exception) {
-            false
+            null
         }
     }
 
-    suspend fun actualizarCita(cita: CitaMedica): Boolean = withContext(Dispatchers.IO) {
-        try {
-            // Verificamos que el ID no sea nulo para actualización
-            cita.id?.let { id ->
-                RetrofitClient.apiService.actualizarCitaMedica(id, cita)
-                true
-            } ?: run {
-                // Si el ID es nulo, no podemos actualizar
-                false
-            }
+    suspend fun actualizarCita(id: Long, cita: CitaMedica): CitaMedica? {
+        return try {
+            RetrofitClient.apiService.actualizarCitaMedica(id, cita)
         } catch (e: Exception) {
-            false
+            null
         }
     }
 
-    suspend fun eliminarCita(id: Long): Boolean = withContext(Dispatchers.IO) {
-        try {
+    suspend fun eliminarCita(id: Long): Boolean {
+        return try {
             RetrofitClient.apiService.eliminarCitaMedica(id)
             true
         } catch (e: Exception) {

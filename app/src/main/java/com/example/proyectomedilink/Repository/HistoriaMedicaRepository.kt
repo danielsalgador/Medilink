@@ -5,10 +5,10 @@ import com.example.proyectomedilink.interfaces.RetrofitClient
 
 class HistoriaMedicaRepository {
 
-    // Obtener todas las historias médicas
+    /* Obtener todas las historias médicas
     suspend fun obtenerHistorias(): List<HistoriaMedica> {
         return RetrofitClient.apiService.obtenerHistorias()
-    }
+    } */
 
     // Obtener una historia médica por ID
     suspend fun obtenerHistoria(id: Long): HistoriaMedica {

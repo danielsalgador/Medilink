@@ -3,56 +3,112 @@ package com.example.proyectomedilink.Screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectomedilink.viewmodel.DisponibilidadHorariaViewModel
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import com.example.proyectomedilink.Model.DisponibilidadHoraria
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.toLocalDate
+import kotlinx.datetime.toLocalTime
+import java.time.format.DateTimeParseException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AgregarDisponibilidadHorariaScreen(medicoId: Long, onDisponibilidadAgregada: () -> Unit) {
+fun AgregarDisponibilidadHoraria(
+    medicoId: Long,
+    onDisponibilidadAgregada: () -> Unit
+) {
     val viewModel: DisponibilidadHorariaViewModel = viewModel()
-    var fechaHoraTexto by remember { mutableStateOf("") }
-    var errorMensaje by remember { mutableStateOf("") }
 
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    var fechaTexto by remember { mutableStateOf("") }
+    var horaTexto by remember { mutableStateOf("") }
+    var errorMensaje by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Agregar Disponibilidad") }) }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+        topBar = {
+            TopAppBar(title = { Text("Agregar Disponibilidad") })
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             OutlinedTextField(
-                value = fechaHoraTexto,
-                onValueChange = { fechaHoraTexto = it },
-                label = { Text("Fecha y Hora (yyyy-MM-dd HH:mm)") },
+                value = fechaTexto,
+                onValueChange = {
+                    fechaTexto = it
+                    errorMensaje = null
+                },
+                label = { Text("Fecha (yyyy-MM-dd)") },
+                isError = errorMensaje != null,
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (errorMensaje.isNotEmpty()) {
-                Text(text = errorMensaje, color = MaterialTheme.colorScheme.error)
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = {
-                try {
-                    val fechaHora = LocalDateTime.parse(fechaHoraTexto, formatter)
-                    viewModel.guardarDisponibilidad(
-                        com.example.proyectomedilink.Model.DisponibilidadHoraria(
-                            id = 0,
-                            fechaHora = fechaHora,
+            OutlinedTextField(
+                value = horaTexto,
+                onValueChange = {
+                    horaTexto = it
+                    errorMensaje = null
+                },
+                label = { Text("Hora (HH:mm)") },
+                isError = errorMensaje != null,
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            errorMensaje?.let {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    try {
+                        // Parsear usando kotlinx.datetime
+                        val fecha = LocalDate.parse(fechaTexto)
+                        val hora = LocalTime.parse(horaTexto)
+
+                        val disponibilidad = DisponibilidadHoraria(
+                            id = 0L,
+                            fecha = fecha,
+                            hora = hora,
                             disponible = true,
                             medicoId = medicoId
                         )
-                    )
-                    onDisponibilidadAgregada()
-                } catch (e: Exception) {
-                    errorMensaje = "Formato de fecha inválido."
-                }
-            }) {
-                Text("Guardar Disponibilidad")
+
+                        viewModel.guardarDisponibilidadHoraria(disponibilidad)
+
+                        fechaTexto = ""
+                        horaTexto = ""
+                        errorMensaje = null
+                        onDisponibilidadAgregada()
+
+                    } catch (e: Exception) {
+                        errorMensaje = "Formato inválido. Fecha: yyyy-MM-dd, Hora: HH:mm"
+                    }
+                },
+                enabled = fechaTexto.isNotBlank() && horaTexto.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Text("Agregar Disponibilidad", style = MaterialTheme.typography.titleMedium)
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn

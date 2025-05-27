@@ -1,14 +1,24 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.proyectomedilink.viewmodel.PacienteViewModel
 import com.example.proyectomedilink.Model.Paciente
+import com.example.proyectomedilink.component.StyledTextField // ✅ Importa desde el archivo común
 
 @Composable
 fun ActualizarPacienteScreen(viewModel: PacienteViewModel, navController: NavController) {
@@ -23,105 +33,87 @@ fun ActualizarPacienteScreen(viewModel: PacienteViewModel, navController: NavCon
     var mensaje by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        OutlinedTextField(
-            value = idInput,
-            onValueChange = { idInput = it },
-            label = { Text("ID del paciente") },
-            modifier = Modifier.fillMaxWidth()
+    val backgroundImageUrl = "https://drive.google.com/uc?export=download&id=1Cs1UC69dCq93jfCJu3dISKN_l_de_PSk"
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        AsyncImage(
+            model = backgroundImageUrl,
+            contentDescription = "Fondo",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = nombre,
-            onValueChange = { nombre = it },
-            label = { Text("Nuevo nombre") },
-            modifier = Modifier.fillMaxWidth()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xCCF7F9F9))
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = correo,
-            onValueChange = { correo = it },
-            label = { Text("Nuevo correo") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = telefono,
-            onValueChange = { telefono = it },
-            label = { Text("Nuevo teléfono") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = documento,
-            onValueChange = { documento = it },
-            label = { Text("Documento") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = direccion,
-            onValueChange = { direccion = it },
-            label = { Text("Dirección") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = condicion,
-            onValueChange = { condicion = it },
-            label = { Text("Condición médica") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                val id = idInput.toLongOrNull()
-
-                if (id != null) {
-                    val pacienteActualizado = Paciente(
-                        id = id,
-                        nombre = nombre,
-                        documento = documento,
-                        correo = correo,
-                        telefono = telefono,
-                        direccion = direccion,
-                        condicion = condicion
-                    )
-
-                    viewModel.actualizarPaciente(id, pacienteActualizado)
-                    mensaje = "Paciente actualizado exitosamente"
-                    errorMessage = ""
-                } else {
-                    mensaje = ""
-                    errorMessage = "ID o Edad no válidos"
-                }
-            },
-            modifier = Modifier.align(Alignment.End)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Actualizar")
-        }
+            Text(
+                text = "Actualizar Paciente",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        if (mensaje.isNotEmpty()) {
-            Text(text = mensaje, color = MaterialTheme.colorScheme.primary)
-        }
+            StyledTextField(value = idInput, placeholder = "ID del paciente", onValueChange = { idInput = it })
+            StyledTextField(value = nombre, placeholder = "Nuevo nombre", onValueChange = { nombre = it })
+            StyledTextField(value = correo, placeholder = "Nuevo correo", onValueChange = { correo = it })
+            StyledTextField(value = telefono, placeholder = "Nuevo teléfono", onValueChange = { telefono = it })
+            StyledTextField(value = documento, placeholder = "Documento", onValueChange = { documento = it })
+            StyledTextField(value = direccion, placeholder = "Dirección", onValueChange = { direccion = it })
+            StyledTextField(value = condicion, placeholder = "Condición médica", onValueChange = { condicion = it })
 
-        if (errorMessage.isNotEmpty()) {
-            Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    val id = idInput.toLongOrNull()
+                    if (id != null) {
+                        val pacienteActualizado = Paciente(
+                            id = id,
+                            nombre = nombre,
+                            documento = documento,
+                            correo = correo,
+                            telefono = telefono,
+                            direccion = direccion,
+                            condicion = condicion
+                        )
+                        viewModel.actualizarPaciente(id, pacienteActualizado)
+                        mensaje = "✅ Paciente actualizado exitosamente"
+                        errorMessage = ""
+                    } else {
+                        mensaje = ""
+                        errorMessage = "❌ ID no válido"
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+            ) {
+                Text("Actualizar", fontSize = 16.sp, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (mensaje.isNotEmpty()) {
+                Text(text = mensaje, color = Color(0xFF2E7D32), fontWeight = FontWeight.Medium)
+            }
+
+            if (errorMessage.isNotEmpty()) {
+                Text(text = errorMessage, color = Color(0xFFD32F2F), fontWeight = FontWeight.Medium)
+            }
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.proyectomedilink.interfaces
 
 import com.example.proyectomedilink.Model.*
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
@@ -19,15 +18,13 @@ interface ApiService {
     suspend fun guardarMedico(@Body medico: Medico): Medico
 
     @PUT("medicos/{id}")
-    suspend fun actualizarMedico(
-        @Path("id") id: Long,
-        @Body medico: Medico
-    ): Medico
+    suspend fun actualizarMedico(@Path("id") id: Long, @Body medico: Medico): Medico
 
     @DELETE("medicos/{id}")
     suspend fun eliminarMedico(@Path("id") id: Long)
 
-    // PACIENTE
+
+    // PACIENTES
     @GET("pacientes")
     suspend fun obtenerPacientes(): List<Paciente>
 
@@ -44,26 +41,26 @@ interface ApiService {
     suspend fun eliminarPaciente(@Path("id") id: Long)
 
 
-    // Citas médicas
+    // CITAS MÉDICAS (solo una versión, usando "citas")
     @GET("citas")
-    suspend fun obtenerTodasCitas(): List<CitaMedica>
+    suspend fun obtenerCitasMedicas(): List<CitaMedica>
 
     @GET("citas/{id}")
-    suspend fun obtenerCitaMedica(@Path("id") id: Long): CitaMedica
+    suspend fun obtenerCitaMedicaPorId(@Path("id") id: Long): CitaMedica?
 
     @POST("citas")
-    suspend fun guardarCitaMedica(@Body cita: CitaMedica): Response<CitaMedica>
+    suspend fun guardarCitaMedica(@Body cita: CitaMedica): CitaMedica?
 
     @PUT("citas/{id}")
-    suspend fun actualizarCitaMedica(@Path("id") id: Long, @Body cita: CitaMedica)
+    suspend fun actualizarCitaMedica(@Path("id") id: Long, @Body cita: CitaMedica): CitaMedica?
 
     @DELETE("citas/{id}")
-    suspend fun eliminarCitaMedica(@Path("id") id: Long)
+    suspend fun eliminarCitaMedica(@Path("id") id: Long): Void
 
 
     // HISTORIAS MÉDICAS
     @GET("historias")
-    suspend fun obtenerHistorias(): List<HistoriaMedica>
+    suspend fun obtenerHistoriasMedicas(): List<HistoriaMedica>
 
     @GET("historias/{id}")
     suspend fun obtenerHistoriaMedica(@Path("id") id: Long): HistoriaMedica
@@ -76,6 +73,7 @@ interface ApiService {
 
     @DELETE("historias/{id}")
     suspend fun eliminarHistoriaMedica(@Path("id") id: Long)
+
 
     // DISPONIBILIDAD HORARIA
     @GET("disponibilidad/{medicoId}")
@@ -91,9 +89,11 @@ interface ApiService {
     suspend fun eliminarDisponibilidadHoraria(@Path("id") id: Long)
 }
 
-// Cliente Retrofit
+
+// RetrofitClient singleton
 object RetrofitClient {
-    private const val BASE_URL = "http://10.157.65.165:8080" // Cambiar según sea necesario
+
+    private const val BASE_URL = "http://10.157.64.184:8080/" // Asegúrate de que el backend esté activo en esta IP y puerto
 
     val apiService: ApiService by lazy {
         Retrofit.Builder()

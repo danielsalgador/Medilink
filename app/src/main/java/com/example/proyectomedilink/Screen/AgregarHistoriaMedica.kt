@@ -9,12 +9,13 @@ import androidx.navigation.NavHostController
 import com.example.proyectomedilink.Model.HistoriaMedica
 import com.example.proyectomedilink.viewmodel.HistoriaMedicaViewModel
 import java.time.LocalDate
-
+import java.time.format.DateTimeParseException
+/*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgregarHistoriaMedicaScreen(
     navController: NavHostController,
-    viewModel: HistoriaMedicaViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: HistoriaMedicaViewModel
 ) {
     var diagnostico by remember { mutableStateOf("") }
     var tratamiento by remember { mutableStateOf("") }
@@ -27,12 +28,12 @@ fun AgregarHistoriaMedicaScreen(
         topBar = {
             TopAppBar(title = { Text("Agregar Historia Médica") })
         }
-    ) { padding ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-                .padding(top = padding.calculateTopPadding()),
+                .padding(top = paddingValues.calculateTopPadding()),
             verticalArrangement = Arrangement.Top
         ) {
             OutlinedTextField(
@@ -42,6 +43,7 @@ fun AgregarHistoriaMedicaScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = tratamiento,
                 onValueChange = { tratamiento = it },
@@ -49,6 +51,7 @@ fun AgregarHistoriaMedicaScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = fecha,
                 onValueChange = { fecha = it },
@@ -56,6 +59,7 @@ fun AgregarHistoriaMedicaScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = pacienteId,
                 onValueChange = { pacienteId = it.filter { c -> c.isDigit() } },
@@ -63,6 +67,7 @@ fun AgregarHistoriaMedicaScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = medicoId,
                 onValueChange = { medicoId = it.filter { c -> c.isDigit() } },
@@ -70,28 +75,41 @@ fun AgregarHistoriaMedicaScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
+
             errorMsg?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
+                Text(text = it, color = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.height(8.dp))
             }
+
             Button(
                 onClick = {
+                    // Validar campos vacíos
                     if (diagnostico.isBlank() || tratamiento.isBlank() || fecha.isBlank()
                         || pacienteId.isBlank() || medicoId.isBlank()
                     ) {
                         errorMsg = "Todos los campos son obligatorios"
-                    } else {
-                        val nuevaHistoria = HistoriaMedica(
-                            id = 0L,
-                            diagnostico = diagnostico.trim(),
-                            tratamiento = tratamiento.trim(),
-                            fecha = LocalDate.parse(fecha),
-                            pacienteId = pacienteId.toLong(),
-                            medicoId = medicoId.toLong()
-                        )
-                        viewModel.guardarHistoria(nuevaHistoria)
-                        navController.popBackStack()
+                        return@Button
                     }
+                    // Validar fecha correcta
+                    val fechaLocalDate = try {
+                        LocalDate.parse(fecha)
+                    } catch (e: DateTimeParseException) {
+                        errorMsg = "Formato de fecha inválido"
+                        return@Button
+                    }
+
+                    // Crear historia médica
+                    val nuevaHistoria = HistoriaMedica(
+                        id = 0L,
+                        diagnostico = diagnostico.trim(),
+                        tratamiento = tratamiento.trim(),
+                        fecha = fechaLocalDate,
+                        pacienteId = pacienteId.toLong(),
+                        medicoId = medicoId.toLong()
+                    )
+
+                    viewModel.guardarHistoria(nuevaHistoria)
+                    navController.popBackStack()
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -100,3 +118,4 @@ fun AgregarHistoriaMedicaScreen(
         }
     }
 }
+*/

@@ -1,32 +1,36 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.proyectomedilink.Model.Medico
 import com.example.proyectomedilink.viewmodel.MedicoViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgregarMedicoScreen(
     navController: NavHostController,
     medicoViewModel: MedicoViewModel
 ) {
     val backgroundImageUrl =
-        "https://drive.google.com/uc?export=download&id=1WYWuGSzoQZpDW4P668zhGYfb6umltEhi"
+        "https://drive.google.com/uc?export=download&id=1fMMYqA7nMlT2XjpK46V3wDJDJeiyhesq"
 
-    // Estados para los campos
     var nombre by remember { mutableStateOf("") }
     var especialidad by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf("") }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
@@ -36,63 +40,34 @@ fun AgregarMedicoScreen(
             modifier = Modifier.fillMaxSize()
         )
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xCCF7F9F9)) // Capa translúcida clara
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Agregar Médico", style = MaterialTheme.typography.headlineMedium)
+            MyStyledTextField(value = nombre, placeholder = "Nombre del Médico", onValueChange = { nombre = it })
+            Spacer(modifier = Modifier.height(16.dp))
 
+            MyStyledTextField(value = especialidad, placeholder = "Especialidad", onValueChange = { especialidad = it })
+            Spacer(modifier = Modifier.height(16.dp))
+
+            MyStyledTextField(value = correo, placeholder = "📧 Correo electrónico", onValueChange = { correo = it })
+            Spacer(modifier = Modifier.height(16.dp))
+
+            MyStyledTextField(value = telefono, placeholder = "📞 Teléfono", onValueChange = { telefono = it })
             Spacer(modifier = Modifier.height(24.dp))
-
-            TextField(
-                value = nombre,
-                onValueChange = { nombre = it },
-                label = { Text("Nombre del Médico") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TextField(
-                value = especialidad,
-                onValueChange = { especialidad = it },
-                label = { Text("Especialidad") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TextField(
-                value = correo,
-                onValueChange = { correo = it },
-                label = { Text("Correo electrónico") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TextField(
-                value = telefono,
-                onValueChange = { telefono = it },
-                label = { Text("Teléfono") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Mostrar mensaje de error si falta algún campo
-            errorMessage?.let { msg ->
-                Text(text = msg, color = MaterialTheme.colorScheme.error)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
 
             Button(
                 onClick = {
-                    if (nombre.isNotBlank() &&
-                        especialidad.isNotBlank() &&
-                        correo.isNotBlank() &&
-                        telefono.isNotBlank()
-                    ) {
-                        // Crear el objeto Medico y guardarlo
+                    if (nombre.isNotBlank() && especialidad.isNotBlank() && correo.isNotBlank() && telefono.isNotBlank()) {
                         val nuevoMedico = Medico(
                             id = null,
                             nombre = nombre.trim(),
@@ -101,7 +76,6 @@ fun AgregarMedicoScreen(
                             telefono = telefono.trim()
                         )
                         medicoViewModel.guardarMedico(nuevoMedico)
-                        // Regresar al listado o pantalla principal de médicos
                         navController.navigate("medico_screen") {
                             popUpTo("medico_screen") { inclusive = true }
                         }
@@ -109,10 +83,42 @@ fun AgregarMedicoScreen(
                         errorMessage = "Por favor, complete todos los campos."
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Text("Guardar Médico")
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (errorMessage.isNotEmpty()) {
+                Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+            }
         }
     }
+}
+
+@Composable
+fun MyStyledTextField(value: String, placeholder: String, onValueChange: (String) -> Unit) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, color = Color.Gray) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(RoundedCornerShape(30.dp)),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            disabledContainerColor = Color.White,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        ),
+        textStyle = TextStyle(fontSize = 16.sp),
+        singleLine = true
+    )
 }

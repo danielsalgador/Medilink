@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.compose.rememberNavController
 import com.example.proyectomedilink.viewmodel.HistoriaMedicaViewModel
 
+/*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EliminarHistoriaMedicaScreen(
@@ -20,6 +21,7 @@ fun EliminarHistoriaMedicaScreen(
 ) {
     var confirmado by remember { mutableStateOf(false) }
     var mensaje by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -34,24 +36,37 @@ fun EliminarHistoriaMedicaScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("¿Deseas eliminar la historia con ID $historiaId?", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                "¿Deseas eliminar la historia con ID $historiaId?",
+                style = MaterialTheme.typography.bodyLarge
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             if (!confirmado) {
-                Row {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Button(onClick = {
-                        confirmado = true
-                        viewModel.eliminarHistoria(historiaId)
-                        mensaje = "Historia eliminada"
+                        try {
+                            viewModel.eliminarHistoria(historiaId)
+                            confirmado = true
+                            mensaje = "Historia eliminada"
+                            error = null
+                        } catch (e: Exception) {
+                            error = "Error al eliminar la historia: ${e.message}"
+                            mensaje = null
+                        }
                     }) {
                         Text("Sí, eliminar")
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
+
                     OutlinedButton(onClick = {
                         navController.popBackStack()
                     }) {
                         Text("Cancelar")
                     }
+                }
+                error?.let {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(text = it, color = MaterialTheme.colorScheme.error)
                 }
             } else {
                 mensaje?.let {
@@ -65,3 +80,4 @@ fun EliminarHistoriaMedicaScreen(
         }
     }
 }
+*/

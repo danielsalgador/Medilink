@@ -19,7 +19,7 @@ class HistoriaMedicaViewModel : ViewModel() {
     private val _historiaMedica = MutableLiveData<HistoriaMedica>()
     val historiaMedica: LiveData<HistoriaMedica> get() = _historiaMedica
 
-    fun obtenerHistorias() {
+    /*fun obtenerHistorias() {
         viewModelScope.launch {
             val historias = withContext(Dispatchers.IO) {
                 repository.obtenerHistorias()
@@ -62,5 +62,5 @@ class HistoriaMedicaViewModel : ViewModel() {
             }
             obtenerHistorias()
         }
-    }
+    }*/
 }

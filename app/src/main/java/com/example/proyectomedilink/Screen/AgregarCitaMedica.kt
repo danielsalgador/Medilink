@@ -1,227 +1,326 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.widget.DatePicker
+import android.widget.TimePicker
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.proyectomedilink.Model.Medico
 import com.example.proyectomedilink.Model.Paciente
 import com.example.proyectomedilink.viewmodel.CitaMedicaViewModel
+import androidx.compose.ui.text.TextStyle
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgregarCitaScreen(
-    viewModel: CitaMedicaViewModel = viewModel(),
-    navController: NavController
+    navController: NavController,
+    viewModel: CitaMedicaViewModel = viewModel()
 ) {
     val pacientes by viewModel.pacientes.observeAsState(emptyList())
-    val medicos by viewModel.medicos.observeAsState(emptyList())
-    val operationSuccess by viewModel.operationSuccess.observeAsState()
-    val errorMessage by viewModel.errorMessage.observeAsState()
+    val medicos   by viewModel.medicos.observeAsState(emptyList())
     val isLoading by viewModel.isLoading.observeAsState(false)
+    val errorMsg  by viewModel.errorMessage.observeAsState()
+    val success   by viewModel.operationSuccess.observeAsState()
 
-    var selectedPaciente by remember { mutableStateOf<Paciente?>(null) }
-    var pacienteDropdownExpanded by remember { mutableStateOf(false) }
+    var selPaciente by remember { mutableStateOf<Paciente?>(null) }
+    var openPacMenu by remember { mutableStateOf(false) }
 
-    var selectedMedico by remember { mutableStateOf<Medico?>(null) }
-    var medicoDropdownExpanded by remember { mutableStateOf(false) }
+    var selMedico by remember { mutableStateOf<Medico?>(null) }
+    var openMedMenu by remember { mutableStateOf(false) }
 
     var fecha by remember { mutableStateOf("") }
-    var hora by remember { mutableStateOf("") }
-    var motivo by remember { mutableStateOf("") }
-    var estado by remember { mutableStateOf("Programada") }
+    var hora  by remember { mutableStateOf("") }
 
-    // Navegar atrás si la operación fue exitosa
-    LaunchedEffect(operationSuccess) {
-        if (operationSuccess == true) {
-            navController.popBackStack()
-        }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    var motivo by remember { mutableStateOf("") }
+
+    val estados = listOf("Programada", "Completada", "Cancelada")
+    var estado    by remember { mutableStateOf(estados.first()) }
+    var openEstMenu by remember { mutableStateOf(false) }
+
+    var errorMessage by remember { mutableStateOf("") }
+
+    val calendarFecha by remember { mutableStateOf(Calendar.getInstance()) }
+    val calendarHora  by remember { mutableStateOf(Calendar.getInstance()) }
+
+    val context = LocalContext.current
+
+    LaunchedEffect(success) {
+        if (success == true) navController.popBackStack()
+    }
+
+    LaunchedEffect(errorMsg) {
+        errorMessage = errorMsg ?: ""
     }
 
     if (isLoading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         return
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        // Paciente Dropdown
-        Text("Seleccionar Paciente:", style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(4.dp))
-        ExposedDropdownMenuBox(
-            expanded = pacienteDropdownExpanded,
-            onExpandedChange = { pacienteDropdownExpanded = it }
-        ) {
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                readOnly = true,
-                value = selectedPaciente?.nombre ?: "",
-                onValueChange = {},
-                label = { Text("Paciente") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = pacienteDropdownExpanded)
-                }
-            )
-            ExposedDropdownMenu(
-                expanded = pacienteDropdownExpanded,
-                onDismissRequest = { pacienteDropdownExpanded = false }
-            ) {
-                pacientes.forEach { paciente ->
-                    DropdownMenuItem(
-                        text = { Text(paciente.nombre) },
-                        onClick = {
-                            selectedPaciente = paciente
-                            pacienteDropdownExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Médico Dropdown
-        Text("Seleccionar Médico:", style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(4.dp))
-        ExposedDropdownMenuBox(
-            expanded = medicoDropdownExpanded,
-            onExpandedChange = { medicoDropdownExpanded = it }
-        ) {
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                readOnly = true,
-                value = selectedMedico?.nombre ?: "",
-                onValueChange = {},
-                label = { Text("Médico") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = medicoDropdownExpanded)
-                }
-            )
-            ExposedDropdownMenu(
-                expanded = medicoDropdownExpanded,
-                onDismissRequest = { medicoDropdownExpanded = false }
-            ) {
-                medicos.forEach { medico ->
-                    DropdownMenuItem(
-                        text = { Text(medico.nombre) },
-                        onClick = {
-                            selectedMedico = medico
-                            medicoDropdownExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Campos de fecha y hora
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = fecha,
-                onValueChange = { fecha = it },
-                label = { Text("Fecha (AAAA-MM-DD)") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
-            )
-            OutlinedTextField(
-                value = hora,
-                onValueChange = { hora = it },
-                label = { Text("Hora (HH:MM)") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = motivo,
-            onValueChange = { motivo = it },
-            label = { Text("Motivo") },
-            modifier = Modifier.fillMaxWidth()
+    // Fondo con imagen + capa translúcida
+    Box(modifier = Modifier.fillMaxSize()) {
+        AsyncImage(
+            model = "https://drive.google.com/uc?export=download&id=1fMMYqA7nMlT2XjpK46V3wDJDJeiyhesq",
+            contentDescription = "Fondo",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xCCF7F9F9))
+        )
 
-        // Selector de Estado
-        val estados = listOf("Programada", "Completada", "Cancelada")
-        var estadoExpanded by remember { mutableStateOf(false) }
-        ExposedDropdownMenuBox(
-            expanded = estadoExpanded,
-            onExpandedChange = { estadoExpanded = it }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp)
+                .padding(vertical = 16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                readOnly = true,
-                value = estado,
-                onValueChange = {},
-                label = { Text("Estado") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = estadoExpanded)
+            // Paciente (como TextField personalizado con Dropdown)
+            MyStyledDropdownField(
+                label = "Paciente",
+                value = selPaciente?.nombre ?: "",
+                expanded = openPacMenu,
+                onExpandedChange = { openPacMenu = it },
+                items = pacientes.map { it.nombre },
+                onItemSelected = { index ->
+                    selPaciente = pacientes[index]
+                    openPacMenu = false
                 }
             )
-            ExposedDropdownMenu(
-                expanded = estadoExpanded,
-                onDismissRequest = { estadoExpanded = false }
-            ) {
-                estados.forEach { opcion ->
-                    DropdownMenuItem(
-                        text = { Text(opcion) },
-                        onClick = {
-                            estado = opcion
-                            estadoExpanded = false
-                        }
-                    )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Médico
+            MyStyledDropdownField(
+                label = "Médico",
+                value = selMedico?.nombre ?: "",
+                expanded = openMedMenu,
+                onExpandedChange = { openMedMenu = it },
+                items = medicos.map { it.nombre },
+                onItemSelected = { index ->
+                    selMedico = medicos[index]
+                    openMedMenu = false
                 }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Fecha y Hora
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MyStyledTextField(
+                    value = fecha,
+                    placeholder = "Fecha (YYYY-MM-DD)",
+                    onValueChange = { fecha = it },
+                    modifier = Modifier.weight(1f),
+                    trailingContent = {
+                        Text(
+                            "📅",
+                            modifier = Modifier
+                                .clickable { showDatePicker = true }
+                                .padding(8.dp)
+                        )
+                    }
+                )
+                MyStyledTextField(
+                    value = hora,
+                    placeholder = "Hora (HH:MM)",
+                    onValueChange = { hora = it },
+                    modifier = Modifier.weight(1f),
+                    trailingContent = {
+                        Text(
+                            "⏰",
+                            modifier = Modifier
+                                .clickable { showTimePicker = true }
+                                .padding(8.dp)
+                        )
+                    }
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (showDatePicker) {
+                DatePickerDialog(
+                    context,
+                    { _: DatePicker, y, m, d ->
+                        calendarFecha.set(y, m, d)
+                        fecha = "%04d-%02d-%02d".format(y, m + 1, d)
+                        showDatePicker = false
+                    },
+                    calendarFecha.get(Calendar.YEAR),
+                    calendarFecha.get(Calendar.MONTH),
+                    calendarFecha.get(Calendar.DAY_OF_MONTH)
+                ).show()
+            }
+            if (showTimePicker) {
+                TimePickerDialog(
+                    context,
+                    { _: TimePicker, h, min ->
+                        calendarHora.set(Calendar.HOUR_OF_DAY, h)
+                        calendarHora.set(Calendar.MINUTE, min)
+                        hora = "%02d:%02d".format(h, min)
+                        showTimePicker = false
+                    },
+                    calendarHora.get(Calendar.HOUR_OF_DAY),
+                    calendarHora.get(Calendar.MINUTE),
+                    true
+                ).show()
+            }
+
+            // Motivo
+            MyStyledTextField(value = motivo, placeholder = "Motivo", onValueChange = { motivo = it })
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Estado (Dropdown)
+            MyStyledDropdownField(
+                label = "Estado",
+                value = estado,
+                expanded = openEstMenu,
+                onExpandedChange = { openEstMenu = it },
+                items = estados,
+                onItemSelected = { index ->
+                    estado = estados[index]
+                    openEstMenu = false
+                }
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Botón Guardar
+            Button(
+                onClick = {
+                    when {
+                        selPaciente == null -> viewModel.setErrorMessage("Seleccione un paciente.")
+                        selMedico   == null -> viewModel.setErrorMessage("Seleccione un médico.")
+                        fecha.isBlank()     -> viewModel.setErrorMessage("Ingrese una fecha.")
+                        hora.isBlank()      -> viewModel.setErrorMessage("Ingrese una hora.")
+                        motivo.isBlank()    -> viewModel.setErrorMessage("Ingrese un motivo.")
+                        else -> viewModel.agregarCitaMedica(
+                            pacienteId = selPaciente!!.id!!,
+                            medicoId  = selMedico!!.id!!,
+                            motivo    = motivo,
+                            estadoStr = estado,
+                            fechaStr  = fecha,
+                            horaStr   = hora
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text("Guardar Cita Médica")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (errorMessage.isNotEmpty()) {
+                Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(24.dp))
+@Composable
+fun MyStyledTextField(
+    value: String,
+    placeholder: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    trailingContent: @Composable (() -> Unit)? = null
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, color = Color.Gray) },
+        modifier = modifier
+            .height(56.dp)
+            .clip(RoundedCornerShape(30.dp)),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            disabledContainerColor = Color.White,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        ),
+        textStyle = TextStyle(fontSize = 16.sp),
+        singleLine = true,
+        trailingIcon = trailingContent
+    )
+}
 
-        // Botón de Guardar
-        Button(
-            onClick = {
-                val pacienteId = selectedPaciente?.id
-                val medicoId = selectedMedico?.id
-                if (pacienteId != null && medicoId != null) {
-                    viewModel.agregarCitaMedica(
-                        pacienteId = pacienteId,
-                        medicoId = medicoId,
-                        motivo = motivo,
-                        estado = estado,
-                        fecha = fecha,
-                        hora = hora
-                    )
-                } else {
-                    viewModel.setErrorMessage("Seleccione un paciente y un médico")
-                }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyStyledDropdownField(
+    label: String,
+    value: String,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    items: List<String>,
+    onItemSelected: (index: Int) -> Unit
+) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = onExpandedChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(RoundedCornerShape(30.dp))
+    ) {
+        TextField(
+            value = value,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded)
             },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                disabledContainerColor = Color.White,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent
+            ),
             modifier = Modifier.fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) }
         ) {
-            Text("Guardar Cita Médica")
-        }
-
-        // Mensajes de error
-        errorMessage?.let { msg ->
-            if (msg.isNotBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = msg,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.fillMaxWidth()
+            items.forEachIndexed { index, item ->
+                DropdownMenuItem(
+                    text = { Text(item) },
+                    onClick = {
+                        onItemSelected(index)
+                    }
                 )
             }
         }

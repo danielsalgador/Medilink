@@ -1,5 +1,6 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,9 +20,8 @@ fun AgregarPacienteScreen(
     pacienteViewModel: PacienteViewModel
 ) {
     val backgroundImageUrl =
-        "https://drive.google.com/uc?export=download&id=1lt73QgCegwvpTGbgsK5S8C_nEhYVKqEI"  // Nueva URL de la imagen de fondo
+        "https://drive.google.com/uc?export=download&id=1lt73QgCegwvpTGbgsK5S8C_nEhYVKqEI"
 
-    // Estados para los campos
     var nombre by remember { mutableStateOf("") }
     var documento by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
@@ -31,7 +31,6 @@ fun AgregarPacienteScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Imagen de fondo
         AsyncImage(
             model = backgroundImageUrl,
             contentDescription = "Imagen de fondo",
@@ -39,7 +38,13 @@ fun AgregarPacienteScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Contenido de la pantalla
+        // Capa semitransparente para mejorar legibilidad
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -47,15 +52,22 @@ fun AgregarPacienteScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "Agregar Paciente", style = MaterialTheme.typography.headlineMedium)
+            Text(
+                text = "Agregar Paciente",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Campos de texto con validación básica en tiempo real (puedes mejorarla)
             TextField(
                 value = nombre,
                 onValueChange = { nombre = it },
                 label = { Text("Nombre") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = nombre.isBlank()
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -63,7 +75,9 @@ fun AgregarPacienteScreen(
                 value = documento,
                 onValueChange = { documento = it },
                 label = { Text("Documento") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = documento.isBlank()
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -71,7 +85,9 @@ fun AgregarPacienteScreen(
                 value = correo,
                 onValueChange = { correo = it },
                 label = { Text("Correo") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = correo.isBlank()
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -79,7 +95,9 @@ fun AgregarPacienteScreen(
                 value = telefono,
                 onValueChange = { telefono = it },
                 label = { Text("Teléfono") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = telefono.isBlank()
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -87,7 +105,9 @@ fun AgregarPacienteScreen(
                 value = direccion,
                 onValueChange = { direccion = it },
                 label = { Text("Dirección") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = direccion.isBlank()
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -95,14 +115,18 @@ fun AgregarPacienteScreen(
                 value = condicion,
                 onValueChange = { condicion = it },
                 label = { Text("Condición") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = condicion.isBlank()
             )
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Mostrar mensaje de error si falta algún campo
             errorMessage?.let { msg ->
-                Text(text = msg, color = MaterialTheme.colorScheme.error)
-                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = msg,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
             }
 
             Button(
@@ -114,9 +138,8 @@ fun AgregarPacienteScreen(
                         direccion.isNotBlank() &&
                         condicion.isNotBlank()
                     ) {
-                        // Crear el objeto Paciente y guardarlo
                         val nuevoPaciente = Paciente(
-                            id = null,  // El ID lo maneja el backend o la base de datos
+                            id = null,
                             nombre = nombre.trim(),
                             documento = documento.trim(),
                             correo = correo.trim(),
@@ -124,8 +147,8 @@ fun AgregarPacienteScreen(
                             direccion = direccion.trim(),
                             condicion = condicion.trim()
                         )
-                        pacienteViewModel.agregarPaciente(nuevoPaciente)
-                        // Regresar a la pantalla de lista de pacientes
+                        pacienteViewModel.guardarPaciente(nuevoPaciente)
+
                         navController.navigate("paciente_screen") {
                             popUpTo("paciente_screen") { inclusive = true }
                         }

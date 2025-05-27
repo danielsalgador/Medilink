@@ -16,7 +16,6 @@ class MedicoViewModel : ViewModel() {
     private val _medicos = MutableLiveData<List<Medico>>(emptyList())
     val medicos: LiveData<List<Medico>> get() = _medicos
 
-
     fun obtenerMedicos() {
         viewModelScope.launch {
             try {
@@ -54,9 +53,7 @@ class MedicoViewModel : ViewModel() {
                 } catch (e: Exception) {
                     println("Error al actualizar médico: ${e.message}")
                 }
-            } ?: run {
-                println("Error: ID del médico es nulo")
-            }
+            } ?: println("Error: ID del médico es nulo")
         }
     }
 

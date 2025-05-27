@@ -1,81 +1,63 @@
 package com.example.proyectomedilink.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.proyectomedilink.Model.CitaMedica
-import com.example.proyectomedilink.Model.Medico
-import com.example.proyectomedilink.Model.Paciente
+import androidx.lifecycle.*
+import com.example.proyectomedilink.Model.*
 import com.example.proyectomedilink.repository.CitaMedicaRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import com.example.proyectomedilink.repository.MedicoRepository
+import com.example.proyectomedilink.repository.PacienteRepository
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.datetime.LocalDateTime
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 class CitaMedicaViewModel : ViewModel() {
 
     private val repository = CitaMedicaRepository()
+    private val pacienteRepository = PacienteRepository()
+    private val medicoRepository = MedicoRepository()
 
-    // Estados observables
-    private val _citas = MutableLiveData<List<CitaMedica>>(emptyList())
-    val citas: LiveData<List<CitaMedica>> get() = _citas
+    private val _pacientes = MutableLiveData<List<Paciente>>()
+    val pacientes: LiveData<List<Paciente>> = _pacientes
 
-    private val _medicos = MutableLiveData<List<Medico>>(emptyList())
-    val medicos: LiveData<List<Medico>> get() = _medicos
+    private val _medicos = MutableLiveData<List<Medico>>()
+    val medicos: LiveData<List<Medico>> = _medicos
 
-    private val _pacientes = MutableLiveData<List<Paciente>>(emptyList())
-    val pacientes: LiveData<List<Paciente>> get() = _pacientes
+    private val _citasMedicas = MutableLiveData<List<CitaMedica>>()
+    val citasMedicas: LiveData<List<CitaMedica>> = _citasMedicas
 
-    private val _errorMessage = MutableLiveData<String>("")
-    val errorMessage: LiveData<String> get() = _errorMessage
+    private val _operationSuccess = MutableLiveData<Boolean?>()
+    val operationSuccess: LiveData<Boolean?> = _operationSuccess
+
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
 
     private val _isLoading = MutableLiveData(false)
-    val isLoading: LiveData<Boolean> get() = _isLoading
-
-    private val _operationSuccess = MutableLiveData<Boolean?>(null)
-    val operationSuccess: LiveData<Boolean?> get() = _operationSuccess
-
-    // Método público para establecer mensajes de error
-    fun setErrorMessage(message: String) {
-        _errorMessage.value = message
-    }
+    val isLoading: LiveData<Boolean> = _isLoading
 
     init {
-        cargarDatosIniciales()
+        obtenerCitasMedicas()
+        cargarDatos()
     }
 
-    private fun cargarDatosIniciales() {
+    fun obtenerCitasMedicas() {
         viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val medicosDeferred = async { repository.obtenerMedicos() }
-                val pacientesDeferred = async { repository.obtenerPacientes() }
-
-                _medicos.value = medicosDeferred.await()
-                _pacientes.value = pacientesDeferred.await()
-                obtenerCitas()
-            } catch (e: Exception) {
-                setErrorMessage("Error al cargar datos: ${e.message}")
-            } finally {
-                _isLoading.value = false
-            }
+            val resultado = repository.obtenerCitasMedicas()
+            _citasMedicas.value = resultado
         }
     }
 
-    fun obtenerCitas() {
+    fun cargarDatos() {
         viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val listaCitas = withContext(Dispatchers.IO) { repository.obtenerCitas() }
-                _citas.value = listaCitas
-            } catch (e: Exception) {
-                setErrorMessage("Error al obtener citas: ${e.message}")
-            } finally {
-                _isLoading.value = false
-            }
+            _pacientes.value = pacienteRepository.obtenerPacientes()
+            _medicos.value = medicoRepository.obtenerMedicos()
+        }
+    }
+
+    suspend fun obtenerCitaPorId(citaId: Long): CitaMedica? {
+        return try {
+            repository.obtenerCitaPorId(citaId)
+        } catch (e: Exception) {
+            _errorMessage.postValue("Error al obtener cita: ${e.message}")
+            null
         }
     }
 
@@ -83,39 +65,61 @@ class CitaMedicaViewModel : ViewModel() {
         pacienteId: Long,
         medicoId: Long,
         motivo: String,
-        estado: String,
-        fecha: String,
-        hora: String
+        estadoStr: String,
+        fechaStr: String,
+        horaStr: String
     ) {
         viewModelScope.launch {
-            _isLoading.value = true
             _operationSuccess.value = null
+            _errorMessage.value = null
+
+            val fechaParsed = try {
+                LocalDate.parse(fechaStr)
+            } catch (e: Exception) {
+                _errorMessage.value = "Formato de fecha inválido"
+                _operationSuccess.value = false
+                return@launch
+            }
+
+            val horaParsed = try {
+                LocalTime.parse(horaStr)
+            } catch (e: Exception) {
+                _errorMessage.value = "Formato de hora inválido"
+                _operationSuccess.value = false
+                return@launch
+            }
+
+            val estadoParsed = try {
+                EstadoCita.values().firstOrNull {
+                    it.name.equals(estadoStr.trim(), ignoreCase = true)
+                } ?: throw IllegalArgumentException("Estado inválido")
+            } catch (e: Exception) {
+                _errorMessage.value = "Estado inválido"
+                _operationSuccess.value = false
+                return@launch
+            }
+
             try {
-                val fechaHora = parseFechaHora(fecha, hora)
                 val nuevaCita = CitaMedica(
-                    id = 0, // ID será generado por el backend
+                    id = 0L,
                     pacienteId = pacienteId,
                     medicoId = medicoId,
-                    fechaHora = fechaHora,
                     motivo = motivo,
-                    estado = estado
+                    estado = estadoParsed,
+                    fecha = fechaParsed,
+                    hora = horaParsed
                 )
-
-                val resultado = withContext(Dispatchers.IO) {
-                    repository.guardarCita(nuevaCita)
-                }
-
-                _operationSuccess.value = resultado
-                if (resultado) {
-                    obtenerCitas()
+                val resultado = repository.agregarCitaMedica(nuevaCita)
+                if (resultado != null) {
+                    _operationSuccess.value = true
+                    obtenerCitasMedicas()
                 } else {
-                    setErrorMessage("Error al guardar la cita")
+                    _errorMessage.value = "Error al agregar cita"
+                    _operationSuccess.value = false
                 }
             } catch (e: Exception) {
-                setErrorMessage("Error: ${e.message}")
+                _errorMessage.value = "Error al agregar cita: ${e.message}"
                 _operationSuccess.value = false
-            } finally {
-                _isLoading.value = false
             }
         }
     }
@@ -125,80 +129,87 @@ class CitaMedicaViewModel : ViewModel() {
         pacienteId: Long,
         medicoId: Long,
         motivo: String,
-        estado: String,
-        fecha: String,
-        hora: String
+        estadoStr: String,
+        fechaStr: String,
+        horaStr: String
     ) {
         viewModelScope.launch {
-            _isLoading.value = true
             _operationSuccess.value = null
+            _errorMessage.value = null
+
+            val fechaParsed = try {
+                LocalDate.parse(fechaStr)
+            } catch (e: Exception) {
+                _errorMessage.value = "Formato de fecha inválido"
+                _operationSuccess.value = false
+                return@launch
+            }
+
+            val horaParsed = try {
+                LocalTime.parse(horaStr)
+            } catch (e: Exception) {
+                _errorMessage.value = "Formato de hora inválido"
+                _operationSuccess.value = false
+                return@launch
+            }
+
+            val estadoParsed = try {
+                EstadoCita.values().firstOrNull {
+                    it.name.equals(estadoStr.trim(), ignoreCase = true)
+                } ?: throw IllegalArgumentException("Estado inválido")
+            } catch (e: Exception) {
+                _errorMessage.value = "Estado inválido"
+                _operationSuccess.value = false
+                return@launch
+            }
+
             try {
-                val fechaHora = parseFechaHora(fecha, hora)
                 val citaActualizada = CitaMedica(
                     id = id,
                     pacienteId = pacienteId,
                     medicoId = medicoId,
-                    fechaHora = fechaHora,
                     motivo = motivo,
-                    estado = estado
+                    estado = estadoParsed,
+                    fecha = fechaParsed,
+                    hora = horaParsed
                 )
-
-                val resultado = withContext(Dispatchers.IO) {
-                    repository.actualizarCita(citaActualizada)
-                }
-
-                _operationSuccess.value = resultado
-                if (resultado) {
-                    obtenerCitas()
+                val resultado = repository.actualizarCita(id, citaActualizada)
+                if (resultado != null) {
+                    _operationSuccess.value = true
+                    obtenerCitasMedicas()
                 } else {
-                    setErrorMessage("Error al actualizar la cita")
+                    _errorMessage.value = "Error al actualizar cita"
+                    _operationSuccess.value = false
                 }
             } catch (e: Exception) {
-                setErrorMessage("Error al actualizar: ${e.message}")
+                _errorMessage.value = "Error al actualizar cita: ${e.message}"
                 _operationSuccess.value = false
-            } finally {
-                _isLoading.value = false
             }
         }
     }
 
-    suspend fun eliminarCita(id: Long): Boolean {
-        return withContext(Dispatchers.IO) {
+    fun eliminarCitaMedica(id: Long) {
+        viewModelScope.launch {
+            _operationSuccess.value = null
+            _errorMessage.value = null
+
             try {
-                _isLoading.postValue(true)
-                _operationSuccess.postValue(null)
-                val resultado = repository.eliminarCita(id)
-                _operationSuccess.postValue(resultado)
-                if (resultado) {
-                    obtenerCitas()
+                val eliminado = repository.eliminarCita(id)
+                if (eliminado) {
+                    _operationSuccess.value = true
+                    obtenerCitasMedicas()
+                } else {
+                    _errorMessage.value = "Error al eliminar cita"
+                    _operationSuccess.value = false
                 }
-                resultado
             } catch (e: Exception) {
-                _errorMessage.postValue("Error al eliminar: ${e.message}")
-                _operationSuccess.postValue(false)
-                false
-            } finally {
-                _isLoading.postValue(false)
+                _errorMessage.value = "Error al eliminar cita: ${e.message}"
+                _operationSuccess.value = false
             }
         }
     }
 
-    fun resetOperationState() {
-        _operationSuccess.value = null
-        _errorMessage.value = ""
-    }
-
-    private fun parseFechaHora(fecha: String, hora: String): LocalDateTime {
-        val fechaHoraString = "$fecha $hora"
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-        val fechaHoraJava = java.time.LocalDateTime.parse(fechaHoraString, formatter)
-
-        return LocalDateTime(
-            fechaHoraJava.year,
-            fechaHoraJava.monthValue,
-            fechaHoraJava.dayOfMonth,
-            fechaHoraJava.hour,
-            fechaHoraJava.minute
-        )
+    fun setErrorMessage(msg: String) {
+        _errorMessage.value = msg
     }
 }

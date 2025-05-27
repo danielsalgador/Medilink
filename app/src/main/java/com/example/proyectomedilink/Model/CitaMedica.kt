@@ -1,19 +1,22 @@
 package com.example.proyectomedilink.Model
 
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CitaMedica(
-    val id: Long? = null,  // Nullable para nuevas citas
-    val pacienteId: Long,   // ID obligatorio
-    val medicoId: Long,     // ID obligatorio
-    val fechaHora: LocalDateTime,
+    val id: Long,
+    val pacienteId: Long,
+    val medicoId: Long,
     val motivo: String,
-    val estado: String      // Ej: "Programada", "Completada", "Cancelada"
+    val estado: EstadoCita,
+    val fecha: LocalDate,
+    val hora: LocalTime
 ) {
-    // Propiedades calculadas
-    val fecha: String
-        get() = "${fechaHora.year}-${fechaHora.monthNumber.toString().padStart(2, '0')}-${fechaHora.dayOfMonth.toString().padStart(2, '0')}"
+    val fechaFormateada: String
+        get() = "${fecha.year}-${fecha.monthNumber.toString().padStart(2, '0')}-${fecha.dayOfMonth.toString().padStart(2, '0')}"
 
-    val hora: String
-        get() = "${fechaHora.hour.toString().padStart(2, '0')}:${fechaHora.minute.toString().padStart(2, '0')}"
+    val horaFormateada: String
+        get() = "${hora.hour.toString().padStart(2, '0')}:${hora.minute.toString().padStart(2, '0')}"
 }

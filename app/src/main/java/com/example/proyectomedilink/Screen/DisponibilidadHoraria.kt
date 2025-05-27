@@ -1,10 +1,10 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
+import ListarDisponibilidadHorariaScreen
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.example.proyectomedilink.viewmodel.DisponibilidadHorariaViewModel
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

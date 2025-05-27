@@ -80,6 +80,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
     implementation("androidx.compose.material3:material3:1.1.1")
     implementation("io.coil-kt:coil-compose:2.3.0")
+    implementation("io.coil-kt:coil-compose:2.2.2")
 
 
     // Lifecycle y ViewModel
@@ -108,13 +109,33 @@ dependencies {
 
     // Bibliotecas de fecha y hora
     implementation ("com.jakewharton.threetenabp:threetenabp:1.4.5")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")// Asegúrate de usar la última versión disponible
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")// Asegúrate de usar la última versión disponible
 
     // Dependencias adicionales
 
     implementation("com.google.dagger:hilt-android:2.44") // Hilt DI para inyección de dependencias
     kapt("com.google.dagger:hilt-compiler:2.44") // Compilador de Hilt
     implementation("com.squareup.retrofit2:adapter-rxjava2:2.9.0") // Si usas RxJava
+
+    implementation ("androidx.compose.material3:material3:1.2.0")
+    implementation ("androidx.compose.material3:material3-window-size-class:1.2.1")
+
+    implementation ("androidx.compose.material3:material3:1.2.1")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.4.3")
+
+    implementation ("androidx.room:room-runtime:2.5.0")
+    kapt ("androidx.room:room-compiler:2.5.0")
+    implementation ("androidx.room:room-ktx:2.5.0")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+
+    implementation ("androidx.compose.material3:material3:1.1.1")
+    implementation ("androidx.compose.material3:material3-window-size-class:1.1.1")
+    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
+    implementation ("androidx.compose.material3:material3:1.1.0-alpha03")
+
 
 
 
@@ -126,6 +147,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
 
 }

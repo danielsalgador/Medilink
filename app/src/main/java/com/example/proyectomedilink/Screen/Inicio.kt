@@ -1,4 +1,4 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,8 +18,7 @@ import coil.compose.AsyncImage
 
 @Composable
 fun NextScreen(navController: NavController) {
-    val backgroundImageUrl = "https://drive.google.com/file/d/1RMBM39XNfqopLbn5Nfasf6N1O4vp9sUB/view?usp=drive_link"
-
+    val backgroundImageUrl = "https://drive.google.com/uc?export=download&id=1RMBM39XNfqopLbn5Nfasf6N1O4vp9sUB"
 
     Box(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
@@ -111,8 +110,7 @@ fun OptionIcon(imageUrl: String, label: String, onClick: () -> Unit) {
         AsyncImage(
             model = imageUrl,
             contentDescription = label,
-            modifier = Modifier
-                .size(80.dp)
+            modifier = Modifier.size(80.dp)
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(

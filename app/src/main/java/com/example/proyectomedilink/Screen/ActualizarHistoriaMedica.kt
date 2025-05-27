@@ -1,4 +1,4 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -12,7 +12,7 @@ import com.example.proyectomedilink.Model.HistoriaMedica
 import com.example.proyectomedilink.viewmodel.HistoriaMedicaViewModel
 import java.time.LocalDate
 
-@OptIn(ExperimentalMaterial3Api::class)
+/*@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActualizarHistoriaMedicaScreen(
     navController: NavHostController,
@@ -119,5 +119,5 @@ fun ActualizarHistoriaMedicaScreen(
         ) {
             CircularProgressIndicator()
         }
-    }
-}
+    }*/
+

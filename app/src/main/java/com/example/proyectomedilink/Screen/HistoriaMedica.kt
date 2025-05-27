@@ -12,13 +12,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.proyectomedilink.Model.HistoriaMedica
 import com.example.proyectomedilink.viewmodel.HistoriaMedicaViewModel
-import java.time.format.DateTimeFormatter
-
+/*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoriaMedicaScreen(navController: NavHostController,
+fun HistoriaMedicaScreen(
+    navController: NavHostController,
     historiaId: Long,
     viewModel: HistoriaMedicaViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
@@ -28,11 +27,17 @@ fun HistoriaMedicaScreen(navController: NavHostController,
         viewModel.obtenerHistoria(historiaId)
     }
 
-    historia?.let { h ->
-        val backgroundImageUrl = "https://example.com/imagen_de_fondo" // Cambia esto a la URL de tu imagen de fondo
+    if (historia == null) {
+        // Mientras carga, mostrar indicador
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else {
+        val h = historia!!
+
+        val backgroundImageUrl = "https://example.com/imagen_de_fondo" // Cambiar por URL válida
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // Imagen de fondo
             AsyncImage(
                 model = backgroundImageUrl,
                 contentDescription = "Imagen de fondo",
@@ -47,7 +52,6 @@ fun HistoriaMedicaScreen(navController: NavHostController,
             )
 
             Column(modifier = Modifier.fillMaxSize()) {
-                // Barra superior
                 TopAppBar(
                     title = { Text("Historia Médica #${h.id}", color = Color.White) },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -65,28 +69,23 @@ fun HistoriaMedicaScreen(navController: NavHostController,
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Opciones en forma de iconos
                     Row(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         HistoriaMedicaOptionIcon(
-                            imageUrl = "https://example.com/editar_icono", // Cambia esto con la URL de tu icono
+                            imageUrl = "https://example.com/editar_icono", // Cambiar por URL válida
                             label = "Editar Historia Médica",
                             onClick = { navController.navigate("actualizar_historia/${h.id}") }
                         )
                         HistoriaMedicaOptionIcon(
-                            imageUrl = "https://example.com/eliminar_icono", // Cambia esto con la URL de tu icono
+                            imageUrl = "https://example.com/eliminar_icono", // Cambiar por URL válida
                             label = "Eliminar Historia Médica",
                             onClick = { navController.navigate("eliminar_historia/${h.id}") }
                         )
                     }
                 }
             }
-        }
-    } ?: run {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
         }
     }
 }
@@ -96,7 +95,7 @@ fun HistoriaMedicaOptionIcon(imageUrl: String, label: String, onClick: () -> Uni
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         IconButton(
             onClick = onClick,
-            modifier = Modifier.size(64.dp) // Tamaño del icono
+            modifier = Modifier.size(64.dp)
         ) {
             AsyncImage(
                 model = imageUrl,
@@ -107,3 +106,4 @@ fun HistoriaMedicaOptionIcon(imageUrl: String, label: String, onClick: () -> Uni
         Text(text = label, color = Color.White, style = MaterialTheme.typography.bodyMedium)
     }
 }
+*/

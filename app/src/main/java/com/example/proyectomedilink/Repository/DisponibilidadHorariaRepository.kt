@@ -11,7 +11,7 @@ class DisponibilidadHorariaRepository {
     }
 
     // Guardar la disponibilidad horaria de un médico
-    suspend fun guardarDisponibilidad(disponibilidad: DisponibilidadHoraria): DisponibilidadHoraria {
+    suspend fun guardarDisponibilidadHoraria(disponibilidad: DisponibilidadHoraria): DisponibilidadHoraria {
         return RetrofitClient.apiService.guardarDisponibilidadHoraria(disponibilidad)
     }
 

@@ -14,60 +14,63 @@ class DisponibilidadHorariaViewModel : ViewModel() {
 
     private val repository = DisponibilidadHorariaRepository()
 
-    // LiveData privado para evitar modificaciones directas
+    // LiveData privado para encapsulamiento
     private val _disponibilidadesHorarias = MutableLiveData<List<DisponibilidadHoraria>>(emptyList())
-
-    // LiveData público para que otros componentes lo puedan observar
     val disponibilidadesHorarias: LiveData<List<DisponibilidadHoraria>> = _disponibilidadesHorarias
 
-    // Agregar el campo medicoId
+    // Campo para almacenar el ID del médico actual
     private var _medicoId: Long? = null
-
     val medicoId: Long?
         get() = _medicoId
 
-    // Método para obtener la disponibilidad horaria de un médico
+    // Obtener la disponibilidad horaria de un médico
     fun obtenerDisponibilidad(medicoId: Long) {
         _medicoId = medicoId
-        viewModelScope.launch {
-            val lista = withContext(Dispatchers.IO) {
-                repository.obtenerDisponibilidad(medicoId)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val lista = repository.obtenerDisponibilidad(medicoId)
+                _disponibilidadesHorarias.postValue(lista)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Aquí podrías emitir un estado de error si deseas
             }
-            _disponibilidadesHorarias.postValue(lista)
         }
     }
 
-    // Método para guardar una nueva disponibilidad
-    fun guardarDisponibilidad(disponibilidad: DisponibilidadHoraria) {
+    // Guardar una nueva disponibilidad
+    fun guardarDisponibilidadHoraria(disponibilidad: DisponibilidadHoraria) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                repository.guardarDisponibilidad(disponibilidad)
+                repository.guardarDisponibilidadHoraria(disponibilidad)
             }
-            obtenerDisponibilidad(disponibilidad.medicoId) // Recargar disponibilidades
         }
     }
 
-    // Método para eliminar una disponibilidad
+    // Eliminar una disponibilidad existente
     fun eliminarDisponibilidad(id: Long, medicoId: Long) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
                 repository.eliminarDisponibilidad(id)
+                obtenerDisponibilidad(medicoId)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            obtenerDisponibilidad(medicoId) // Recargar disponibilidades
         }
     }
 
-    // Método para actualizar la disponibilidad
+    // Actualizar una disponibilidad existente
     fun actualizarDisponibilidad(id: Long, disponibilidad: DisponibilidadHoraria) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
                 repository.actualizarDisponibilidad(id, disponibilidad)
+                obtenerDisponibilidad(disponibilidad.medicoId)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            obtenerDisponibilidad(disponibilidad.medicoId) // Recargar disponibilidades
         }
     }
 
-    // Método para obtener una disponibilidad por ID
+    // Obtener una disponibilidad puntual desde el LiveData
     fun obtenerDisponibilidadPorId(id: Long): DisponibilidadHoraria? {
         return _disponibilidadesHorarias.value?.find { it.id == id }
     }

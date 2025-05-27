@@ -1,78 +1,86 @@
-package com.example.proyectomedilink.Screen
+package com.example.proyectomedilink.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.proyectomedilink.Model.CitaMedica
 import com.example.proyectomedilink.viewmodel.CitaMedicaViewModel
-import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EliminarCitaMedicaScreen(
-    viewModel: CitaMedicaViewModel,
-    navController: NavController,
-    citaId: Long
+    citaId: Long,
+    viewModel: CitaMedicaViewModel = viewModel(),
+    navController: NavController
 ) {
-    val scope = rememberCoroutineScope()
-    val errorMessage by viewModel.errorMessage.observeAsState()
+    val citas by viewModel.citasMedicas.observeAsState(emptyList())
+    val operationSuccess by viewModel.operationSuccess.observeAsState(null)
     val isLoading by viewModel.isLoading.observeAsState(false)
-    val operationSuccess by viewModel.operationSuccess.observeAsState()
+    val errorMessage by viewModel.errorMessage.observeAsState(null) // Suponiendo que lo tienes en VM
 
-    // Show loading indicator while deleting
-    if (isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-        return
-    }
+    val cita = citas.find { it.id == citaId }
 
-    // Automatically navigate back if deletion was successful
     LaunchedEffect(operationSuccess) {
         if (operationSuccess == true) {
             navController.popBackStack()
         }
     }
 
-    AlertDialog(
-        onDismissRequest = { navController.popBackStack() },
-        title = { Text(text = "Confirmar Eliminación") },
-        text = {
-            Column {
-                Text("¿Está seguro que desea eliminar la cita médica?")
-                Spacer(modifier = Modifier.height(8.dp))
-                if (!errorMessage.isNullOrEmpty()) {
-                    Text(
-                        text = errorMessage ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    scope.launch {
-                        viewModel.eliminarCita(citaId)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Eliminar Cita Médica") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
                     }
                 }
-            ) {
-                Text("Confirmar")
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = { navController.popBackStack() }
-            ) {
-                Text("Cancelar")
+            )
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize(), contentAlignment = Alignment.Center) {
+
+            when {
+                isLoading -> {
+                    CircularProgressIndicator()
+                }
+                cita == null -> {
+                    Text("Cita no encontrada", style = MaterialTheme.typography.titleMedium)
+                }
+                else -> {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "¿Está seguro que desea eliminar la cita de ${cita.fecha} a las ${cita.hora}?",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        errorMessage?.let {
+                            Text(text = it, color = MaterialTheme.colorScheme.error)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        Button(
+                            onClick = { viewModel.eliminarCitaMedica(citaId) },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Eliminar")
+                        }
+                    }
+                }
             }
         }
-    )
+    }
 }
